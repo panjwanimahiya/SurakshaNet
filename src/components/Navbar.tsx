@@ -1,17 +1,26 @@
-import { Link, useLocation } from "react-router-dom";
-import { Shield, Menu, X } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Shield, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { isLoggedIn, userName, logout } = useAuth();
+  const navigate = useNavigate();
 
   const links = [
     { to: "/", label: "Home" },
     { to: "/safety-tips", label: "Safety Tips" },
     { to: "/emergency-contacts", label: "Contacts" },
   ];
+
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+    navigate("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b">
@@ -35,12 +44,23 @@ const Navbar = () => {
               {l.label}
             </Link>
           ))}
-          <Link to="/login">
-            <Button variant="outline" size="sm">Log In</Button>
-          </Link>
-          <Link to="/signup">
-            <Button size="sm">Sign Up</Button>
-          </Link>
+          {isLoggedIn ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-foreground">Hi, {userName}</span>
+              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1">
+                <LogOut className="w-3.5 h-3.5" /> Log Out
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="outline" size="sm">Log In</Button>
+              </Link>
+              <Link to="/signup">
+                <Button size="sm">Sign Up</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <button className="md:hidden" onClick={() => setOpen(!open)}>
@@ -61,12 +81,20 @@ const Navbar = () => {
             </Link>
           ))}
           <div className="flex gap-2 pt-2">
-            <Link to="/login" onClick={() => setOpen(false)}>
-              <Button variant="outline" size="sm">Log In</Button>
-            </Link>
-            <Link to="/signup" onClick={() => setOpen(false)}>
-              <Button size="sm">Sign Up</Button>
-            </Link>
+            {isLoggedIn ? (
+              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1">
+                <LogOut className="w-3.5 h-3.5" /> Log Out
+              </Button>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setOpen(false)}>
+                  <Button variant="outline" size="sm">Log In</Button>
+                </Link>
+                <Link to="/signup" onClick={() => setOpen(false)}>
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
