@@ -1,11 +1,47 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, MapPin, Check, Loader2 } from "lucide-react";
+import { AlertTriangle, MapPin, Check, Loader2, Settings, MapPinOff } from "lucide-react";
 
 type SOSState = "idle" | "confirming" | "sending" | "sent";
+type LocationPermission = "prompt" | "granted" | "denied" | "unavailable";
 
 const SOSButton = () => {
   const [state, setState] = useState<SOSState>("idle");
+  const [locationPermission, setLocationPermission] = useState<LocationPermission>("prompt");
+  const [showLocationSettings, setShowLocationSettings] = useState(false);
+
+  const checkPermission = async () => {
+    if (!navigator.geolocation) {
+      setLocationPermission("unavailable");
+      return;
+    }
+    if (navigator.permissions) {
+      try {
+        const result = await navigator.permissions.query({ name: "geolocation" });
+        setLocationPermission(result.state as LocationPermission);
+        result.onchange = () => setLocationPermission(result.state as LocationPermission);
+      } catch {
+        setLocationPermission("prompt");
+      }
+    }
+  };
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationPermission("unavailable");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setLocationPermission("granted");
+        setShowLocationSettings(false);
+      },
+      () => {
+        setLocationPermission("denied");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const getContacts = (): { name: string; phone: string }[] => {
     try {
@@ -17,6 +53,7 @@ const SOSButton = () => {
 
   const handleSOS = () => {
     if (state === "idle") {
+      checkPermission();
       setState("confirming");
       return;
     }
@@ -25,41 +62,44 @@ const SOSButton = () => {
       setState("sending");
 
       if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser.");
-        setState("idle");
+        sendAlert(null);
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const { latitude, longitude } = pos.coords;
-          const locationUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-          const contacts = getContacts();
-          const message = encodeURIComponent(
-            `🚨 EMERGENCY SOS! I need help immediately!\n📍 My live location: ${locationUrl}\n⏰ Time: ${new Date().toLocaleString()}\nPlease contact me or send help to this location!`
-          );
-
-          if (contacts.length === 0) {
-            // Open WhatsApp with pre-filled message (user picks contact)
-            window.open(`https://wa.me/?text=${message}`, "_blank");
-          } else {
-            // Send to each emergency contact
-            contacts.forEach((contact) => {
-              const phone = contact.phone.replace(/[^0-9]/g, "");
-              window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-            });
-          }
-
-          setState("sent");
-          setTimeout(() => setState("idle"), 4000);
+          sendAlert(`https://www.google.com/maps?q=${latitude},${longitude}`);
         },
-        (err) => {
-          alert("Could not get your location. Please enable location services. Error: " + err.message);
-          setState("idle");
+        () => {
+          // Location denied/failed — still send alert without location
+          sendAlert(null);
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
+  };
+
+  const sendAlert = (locationUrl: string | null) => {
+    const contacts = getContacts();
+    const locationLine = locationUrl
+      ? `\n📍 My live location: ${locationUrl}`
+      : "\n📍 Location unavailable";
+    const message = encodeURIComponent(
+      `🚨 EMERGENCY SOS! I need help immediately!${locationLine}\n⏰ Time: ${new Date().toLocaleString()}\nPlease contact me or send help!`
+    );
+
+    if (contacts.length === 0) {
+      window.open(`https://wa.me/?text=${message}`, "_blank");
+    } else {
+      contacts.forEach((contact) => {
+        const phone = contact.phone.replace(/[^0-9]/g, "");
+        window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+      });
+    }
+
+    setState("sent");
+    setTimeout(() => setState("idle"), 4000);
   };
 
   const cancel = () => setState("idle");
@@ -137,6 +177,77 @@ const SOSButton = () => {
         {state === "confirming" && "Tap again to send emergency alert"}
         {state === "sent" && "Emergency contacts have been notified"}
       </p>
+
+      {/* Location Settings Toggle */}
+      <button
+        onClick={() => { checkPermission(); setShowLocationSettings(!showLocationSettings); }}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Settings className="w-3.5 h-3.5" />
+        Location Settings
+      </button>
+
+      {/* Location Settings Panel */}
+      <AnimatePresence>
+        {showLocationSettings && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="w-64 rounded-xl border bg-card p-4 text-sm overflow-hidden"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              {locationPermission === "granted" ? (
+                <MapPin className="w-4 h-4 text-safe" />
+              ) : (
+                <MapPinOff className="w-4 h-4 text-sos" />
+              )}
+              <span className="font-medium text-foreground">
+                {locationPermission === "granted" && "Location allowed ✓"}
+                {locationPermission === "denied" && "Location blocked"}
+                {locationPermission === "prompt" && "Location not set"}
+                {locationPermission === "unavailable" && "Location not supported"}
+              </span>
+            </div>
+
+            {locationPermission === "granted" ? (
+              <p className="text-muted-foreground text-xs">
+                Your location will be shared when you press SOS. To revoke, change it in your browser's site settings.
+              </p>
+            ) : locationPermission === "denied" ? (
+              <div className="space-y-2">
+                <p className="text-muted-foreground text-xs">
+                  Location is blocked. To allow it:
+                </p>
+                <ol className="text-muted-foreground text-xs list-decimal pl-4 space-y-1">
+                  <li>Click the lock/info icon in your browser's address bar</li>
+                  <li>Find "Location" and set it to "Allow"</li>
+                  <li>Reload the page</li>
+                </ol>
+                <p className="text-muted-foreground text-xs mt-2">
+                  SOS will still work without location — alerts will be sent without a map link.
+                </p>
+              </div>
+            ) : locationPermission === "unavailable" ? (
+              <p className="text-muted-foreground text-xs">
+                Your browser doesn't support location. SOS alerts will be sent without a map link.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-muted-foreground text-xs">
+                  Allow location access so your SOS includes a map link for contacts.
+                </p>
+                <button
+                  onClick={requestLocation}
+                  className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Allow Location Access
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
