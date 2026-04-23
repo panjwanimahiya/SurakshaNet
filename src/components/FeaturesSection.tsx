@@ -41,17 +41,17 @@ const FeaturesSection = () => (
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="text-center mb-14"
+        className="text-center mb-20"
       >
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
+        <h2 className="text-5xl md:text-6xl lg:text-7xl font-display font-black text-foreground mb-6">
           Your Safety, Our Priority
         </h2>
-        <p className="text-muted-foreground max-w-xl mx-auto">
+        <p className="text-xl md:text-2xl lg:text-3xl font-medium text-muted-foreground max-w-4xl mx-auto leading-relaxed">
           Powerful features designed to keep you safe, alert, and connected — wherever you go.
         </p>
       </motion.div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 gap-8 md:gap-12">
         {features.map((f, i) => (
           <motion.div
             key={f.title}
@@ -59,13 +59,13 @@ const FeaturesSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1 }}
-            className="bg-card rounded-xl p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow border"
+            className="bg-card rounded-2xl p-10 md:p-14 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] transition-shadow border-2"
           >
-            <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-              <f.icon className="w-5 h-5 text-primary" />
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+              <f.icon className="w-8 h-8 md:w-10 md:h-10 text-primary" />
             </div>
-            <h3 className="font-display font-semibold text-foreground mb-2">{f.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+            <h3 className="font-display font-black text-2xl md:text-3xl lg:text-4xl text-foreground mb-4 tracking-tight">{f.title}</h3>
+            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground leading-relaxed font-medium">{f.desc}</p>
           </motion.div>
         ))}
       </div>

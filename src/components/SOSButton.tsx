@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, MapPin, Check, Loader2, Settings, MapPinOff } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 type SOSState = "idle" | "confirming" | "sending" | "sent";
 type LocationPermission = "prompt" | "granted" | "denied" | "unavailable";
@@ -9,6 +10,7 @@ const SOSButton = () => {
   const [state, setState] = useState<SOSState>("idle");
   const [locationPermission, setLocationPermission] = useState<LocationPermission>("prompt");
   const [showLocationSettings, setShowLocationSettings] = useState(false);
+  const [activeInterval, setActiveInterval] = useState<any>(null);
 
   const checkPermission = async () => {
     if (!navigator.geolocation) {
@@ -43,114 +45,146 @@ const SOSButton = () => {
     );
   };
 
-  const getContacts = (): { name: string; phone: string }[] => {
-    try {
-      return JSON.parse(localStorage.getItem("emergency_contacts") || "[]");
-    } catch {
-      return [];
+  const [contacts, setContacts] = useState<any[]>([]);
+  const { getToken } = useAuth();
+
+  useEffect(() => {
+    const fetchContacts = async () => {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const res = await fetch("http://localhost:5000/api/contacts", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setContacts(data);
+        }
+      } catch (e) {
+        console.error("Failed to load contacts for SOS");
+      }
+    };
+    fetchContacts();
+  }, [getToken]);
+
+  const stopSOS = () => {
+    if (activeInterval) clearInterval(activeInterval);
+    setActiveInterval(null);
+    setState("idle");
+  };
+
+  const dispatchSOSRound = (isFirst: boolean = false) => {
+    if (!navigator.geolocation) {
+      sendAlert(null, isFirst);
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        sendAlert(`https://www.google.com/maps?q=${latitude},${longitude}`, isFirst);
+      },
+      () => sendAlert(null, isFirst), // Location denied/failed
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleSOS = () => {
-    if (state === "idle") {
+    if (state === "idle" || state === "confirming") {
       checkPermission();
-      setState("confirming");
-      return;
-    }
-
-    if (state === "confirming") {
       setState("sending");
+      
+      // Force automatic physical delivery immediately
+      dispatchSOSRound(true);
 
-      if (!navigator.geolocation) {
-        sendAlert(null);
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const { latitude, longitude } = pos.coords;
-          sendAlert(`https://www.google.com/maps?q=${latitude},${longitude}`);
-        },
-        () => {
-          // Location denied/failed — still send alert without location
-          sendAlert(null);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+      // Initiate continuous real-time broadcast loop (every 15 seconds) SILENTLY
+      const id = setInterval(() => {
+        dispatchSOSRound(false);
+      }, 15000);
+      setActiveInterval(id);
+    } else if (state === "sent" || state === "sending") {
+      stopSOS();
     }
   };
 
-  const sendAlert = (locationUrl: string | null) => {
-    const contacts = getContacts();
+  const sendAlert = async (locationUrl: string | null, isFirst: boolean = false) => {
     const locationLine = locationUrl
       ? `\n📍 My live location: ${locationUrl}`
       : "\n📍 Location unavailable";
-    const message = encodeURIComponent(
-      `🚨 EMERGENCY SOS! I need help immediately!${locationLine}\n⏰ Time: ${new Date().toLocaleString()}\nPlease contact me or send help!`
-    );
+    const rawMessage = `🚨 EMERGENCY SOS! I am in danger and need help immediately!${locationLine}\n⏰ Time: ${new Date().toLocaleString()}\nPlease contact me or send help immediately!`;
 
-    if (contacts.length === 0) {
-      window.open(`https://wa.me/?text=${message}`, "_blank");
-    } else {
-      contacts.forEach((contact) => {
-        const phone = contact.phone.replace(/[^0-9]/g, "");
-        window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-      });
+    // Guarantee physical visibility for demonstration by hijacking the exact current active browser intent
+    if (isFirst && contacts.length > 0) {
+      const primaryPhone = contacts[0].phone.replace(/[^0-9+]/g, "");
+      // Direct the SurakshaNet tab strictly into the WhatsApp Web pipeline, avoiding any Chrome security blockers
+      window.location.assign(`https://web.whatsapp.com/send?phone=${primaryPhone}&text=${encodeURIComponent(rawMessage)}`);
     }
 
-    setState("sent");
-    setTimeout(() => setState("idle"), 4000);
+    // Silently and automatically dispatch across the SurakshaNet server
+    try {
+      const token = getToken();
+      if (token) {
+        await fetch("http://localhost:5000/api/sos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ locationUrl, message: rawMessage })
+        });
+      }
+    } catch (e) {
+      console.error("Background dispatch failed:", e);
+    }
+
+    setState("sent"); // Stays visually active until stopped!
   };
 
   const cancel = () => setState("idle");
 
   return (
-    <div className="relative flex flex-col items-center gap-4">
+    <div className="relative flex flex-col items-center gap-8">
       {/* Pulsing rings */}
-      {state === "idle" && (
+      {(state === "idle" || state === "sent") && (
         <>
-          <div className="absolute w-48 h-48 rounded-full bg-sos/10 sos-ring" />
-          <div className="absolute w-48 h-48 rounded-full bg-sos/10 sos-ring" style={{ animationDelay: "1s" }} />
+          <div className="absolute w-[300px] h-[300px] md:w-[450px] md:h-[450px] rounded-full bg-sos/10 sos-ring top-[-25px] md:top-[-80px]" />
+          <div className="absolute w-[300px] h-[300px] md:w-[450px] md:h-[450px] rounded-full bg-sos/10 sos-ring top-[-25px] md:top-[-80px]" style={{ animationDelay: "1s" }} />
         </>
       )}
 
       <motion.button
         onClick={handleSOS}
         whileTap={{ scale: 0.95 }}
-        className={`relative z-10 w-40 h-40 rounded-full font-display font-bold text-xl flex flex-col items-center justify-center gap-2 transition-all duration-300 ${
-          state === "idle"
+        className={`relative z-10 w-64 h-64 md:w-72 md:h-72 rounded-full font-display font-bold text-4xl md:text-5xl flex flex-col items-center justify-center gap-3 transition-all duration-300 ${state === "idle"
             ? "bg-sos text-sos-foreground shadow-[var(--shadow-sos)] sos-pulse"
             : state === "confirming"
-            ? "bg-warning text-warning-foreground shadow-[0_0_30px_hsl(var(--warning)/0.4)]"
-            : state === "sending"
-            ? "bg-warning text-warning-foreground"
-            : "bg-safe text-safe-foreground shadow-[0_0_30px_hsl(var(--safe)/0.3)]"
-        }`}
+              ? "bg-warning text-warning-foreground shadow-[0_0_40px_hsl(var(--warning)/0.5)]"
+              : state === "sending"
+                ? "bg-warning text-warning-foreground"
+                : "bg-sos text-sos-foreground shadow-[0_0_80px_hsl(var(--sos)/0.7)] sos-pulse"
+          }`}
       >
         <AnimatePresence mode="wait">
           {state === "idle" && (
-            <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-1">
-              <AlertTriangle className="w-8 h-8" />
+            <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
+              <AlertTriangle className="w-16 h-16 md:w-24 md:h-24 mb-2" />
               <span>SOS</span>
             </motion.div>
           )}
           {state === "confirming" && (
-            <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-1 text-base">
-              <AlertTriangle className="w-7 h-7" />
+            <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2 text-2xl md:text-3xl text-center">
+              <AlertTriangle className="w-14 h-14 md:w-16 md:h-16 mb-2" />
               <span>TAP TO</span>
               <span>CONFIRM</span>
             </motion.div>
           )}
           {state === "sending" && (
-            <motion.div key="sending" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <span className="text-sm">Sending...</span>
+            <motion.div key="sending" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-4">
+              <Loader2 className="w-14 h-14 md:w-16 md:h-16 animate-spin" />
+              <span className="text-2xl">Sending...</span>
             </motion.div>
           )}
           {state === "sent" && (
-            <motion.div key="sent" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-1">
-              <Check className="w-8 h-8" />
-              <span className="text-sm">Alert Sent!</span>
+            <motion.div key="sent" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
+              <Loader2 className="w-12 h-12 md:w-16 md:h-16 animate-spin mb-1" />
+              <span className="text-3xl text-center">ACTIVE</span>
+              <span className="text-sm opacity-90 tracking-widest">(TAP TO STOP)</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -167,15 +201,17 @@ const SOSButton = () => {
         </motion.button>
       )}
 
-      <p className="text-sm text-muted-foreground text-center max-w-[220px]">
+      <p className="text-lg md:text-xl text-muted-foreground text-center max-w-[300px]">
         {state === "idle" && (
           <>
-            <MapPin className="inline w-3.5 h-3.5 mr-1" />
-            Shares your live location via WhatsApp
+            <MapPin className="inline w-5 h-5 mr-2" />
+            Shares your live location via internet
           </>
         )}
         {state === "confirming" && "Tap again to send emergency alert"}
-        {state === "sent" && "Emergency contacts have been notified"}
+        {state === "sent" && (
+           <span className="text-sos font-bold animate-pulse">Broadcasting live location directly to contacts every 15s...</span>
+        )}
       </p>
 
       {/* Location Settings Toggle */}

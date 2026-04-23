@@ -1,0 +1,151 @@
+{
+  "users": [
+    {
+      "id": "1776961020863",
+      "name": "Priyanka Patil",
+      "email": "patilpriyanka211006@gmail.com",
+      "password": "$2b$10$W52ZUj7guzvEhBgDQmzMQOrUzlvJXZfxODYqvpPboRIjDQBqUxln."
+    },
+    {
+      "id": "1776961068366",
+      "name": "Aryan Yewale",
+      "email": "aryan_yewale@gmail.com",
+      "password": "$2b$10$Qfh2qe8/G5HQ2fQUEAvJL.V841/9tJQirW.Qgb.5qj0ivlMdtdc/m"
+    },
+    {
+      "id": "1776963024858",
+      "name": "ketaki",
+      "email": "ketaki@gmail.com",
+      "password": "$2b$10$vplzoXhEzNGpFU51cFCdG.E./WqvcGvbTtSgR3YbcaQkpGDcY6umq"
+    },
+    {
+      "id": "1776965836315",
+      "name": "mahiya",
+      "email": "mahiya_p@gmail.com",
+      "password": "$2b$10$bxed38n1UizTxxoLSqz28./ZevoV.0DiXs8P4TqgcHriYQm1xafVq"
+    }
+  ],
+  "contacts": [
+    {
+      "id": "1776963079081",
+      "userId": "1776963024858",
+      "name": "priyanka",
+      "phone": "+919922795207",
+      "relation": "friend"
+    },
+    {
+      "id": "1776965873654",
+      "userId": "1776965836315",
+      "name": "priyanka",
+      "phone": "+919922795207",
+      "relation": "friend"
+    },
+    {
+      "id": "1776967304605",
+      "userId": "1776961020863",
+      "name": "priyanka",
+      "phone": "+919922795207",
+      "relation": "self"
+    },
+    {
+      "id": "1776968401027",
+      "userId": "1776961020863",
+      "name": "saarthak",
+      "phone": "+919175097897",
+      "relation": "friend"
+    },
+    {
+      "id": "1776975773639",
+      "userId": "1776961020863",
+      "name": "aryan",
+      "phone": "+919920268120",
+      "relation": "friend"
+    }
+  ],
+  "chats": [
+    {
+      "id": "1776962227438",
+      "sender": "user",
+      "text": "going home alone at night what should I do",
+      "userId": "1776961068366"
+    },
+    {
+      "id": "1776962227941",
+      "sender": "ai",
+      "text": "Your intuition is your best defense. Leave the area calmly but quickly. If they approach, loudly state you are meeting someone right outside.",
+      "userId": "1776961068366"
+    },
+    {
+      "id": "1776963330096",
+      "sender": "user",
+      "text": "Tham Tham Tham",
+      "userId": "1776963024858"
+    },
+    {
+      "id": "1776963330604",
+      "sender": "ai",
+      "text": "To give you the best tactical advice, please move to a well-lit area first. Your safety is paramount. Keep your phone ready.",
+      "userId": "1776963024858"
+    },
+    {
+      "id": "1776963393459",
+      "sender": "user",
+      "text": "currently I'm alone at station, some guys are following me what should I do?",
+      "userId": "1776963024858"
+    },
+    {
+      "id": "1776963393962",
+      "sender": "ai",
+      "text": "Your intuition is your best defense. Leave the area calmly but quickly. If they approach, loudly state you are meeting someone right outside.",
+      "userId": "1776963024858"
+    },
+    {
+      "id": "1776966110837",
+      "sender": "user",
+      "text": "what should I do",
+      "userId": "1776965836315"
+    },
+    {
+      "id": "1776966111340",
+      "sender": "ai",
+      "text": "I am analyzing your situation. When in doubt, trust your instincts—leave the area immediately and call a trusted contact. Do you want to check the Nearby Help map?",
+      "userId": "1776965836315"
+    },
+    {
+      "id": "1776966158094",
+      "sender": "user",
+      "text": "currently I am  alone at station, there are some guys following me, I am feeling unsafe what should I do?",
+      "userId": "1776965836315"
+    },
+    {
+      "id": "1776966158598",
+      "sender": "ai",
+      "text": "If you feel unsafe around these people, do not engage. Stay on the phone with someone—even if you pretend—and move to a well-lit, populated space immediately.",
+      "userId": "1776965836315"
+    },
+    {
+      "id": "1776969931088",
+      "sender": "user",
+      "text": "currently I am alone station there are some guys following me what should I do",
+      "userId": "1776961020863"
+    },
+    {
+      "id": "1776969931594",
+      "sender": "ai",
+      "text": "Your intuition is your best defense. Leave the area calmly but quickly. If they approach, loudly state you are meeting someone right outside.",
+      "userId": "1776961020863"
+    },
+    {
+      "id": "1776969991434",
+      "sender": "user",
+      "text": "I'm alone at mhy officce at night, there are some guys working but i'm feeling unsafe what should I do?",
+      "userId": "1776961020863"
+    },
+    {
+      "id": "1776969991940",
+      "sender": "ai",
+      "text": "Since you are alone and feeling unsafe, do not show fear. Walk confidently towards the nearest exit or public area immediately. Share your live location with a friend or family member right now using the Nearby Help tool.",
+      "userId": "1776961020863"
+    }
+  ]
+}

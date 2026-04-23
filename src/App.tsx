@@ -10,6 +10,9 @@ import Signup from "./pages/Signup.tsx";
 import EmergencyContacts from "./pages/EmergencyContacts.tsx";
 import SafetyTips from "./pages/SafetyTips.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import NearbyHelp from "./pages/NearbyHelp.tsx";
+import AnimatedSplash from "./components/AnimatedSplash.tsx";
+import { AICompanion } from "./components/AICompanion.tsx";
 
 const queryClient = new QueryClient();
 
@@ -19,16 +22,20 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/emergency-contacts" element={<EmergencyContacts />} />
-            <Route path="/safety-tips" element={<SafetyTips />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AnimatedSplash>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/emergency-contacts" element={<EmergencyContacts />} />
+              <Route path="/safety-tips" element={<SafetyTips />} />
+              <Route path="/nearby-help" element={<NearbyHelp />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+          <AICompanion />
+        </AnimatedSplash>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

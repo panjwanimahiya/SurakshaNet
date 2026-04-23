@@ -63,33 +63,30 @@ const tips = [
 const SafetyTips = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <div className="container mx-auto px-4 pt-24 pb-16 max-w-4xl">
-      <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back to Home
-      </Link>
-      <h1 className="text-3xl font-display font-bold text-foreground mb-2">Safety Tips & Guides</h1>
-      <p className="text-muted-foreground mb-10">Practical advice to help you stay safe in every situation.</p>
+    <div className="container mx-auto px-4 lg:px-12 pt-36 pb-24 max-w-[1400px]">
+      <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-black text-foreground mb-6 tracking-tight">Safety Tips & Guides</h1>
+      <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-16 font-medium max-w-4xl">Practical advice to help you stay safe in every situation.</p>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-10 md:gap-12">
         {tips.map((tip, i) => (
           <motion.div
             key={tip.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08 }}
-            className="bg-card border rounded-xl p-6 shadow-[var(--shadow-card)]"
+            className="bg-card border-2 rounded-3xl p-10 md:p-14 shadow-[var(--shadow-card)] hover:shadow-xl transition-all"
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <tip.icon className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-6 mb-8">
+              <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <tip.icon className="w-8 h-8 md:w-10 md:h-10 text-primary" />
               </div>
-              <h2 className="font-display font-semibold text-foreground">{tip.title}</h2>
+              <h2 className="font-display font-black text-3xl md:text-4xl text-foreground">{tip.title}</h2>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-6">
               {tip.items.map((item) => (
-                <li key={item} className="text-sm text-muted-foreground flex gap-2">
-                  <span className="text-primary mt-1">•</span>
-                  {item}
+                <li key={item} className="text-xl lg:text-2xl text-muted-foreground flex gap-4 leading-relaxed font-medium">
+                  <span className="text-primary mt-1 text-2xl">•</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>

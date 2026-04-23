@@ -47,47 +47,47 @@ const SafetyTimerWidget = () => {
   const running = secondsLeft !== null && !expired;
 
   return (
-    <div className="bg-card border rounded-xl p-5 shadow-[var(--shadow-card)] max-w-xs w-full">
-      <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-5 h-5 text-primary" />
-        <h3 className="font-display font-semibold text-foreground">Safety Timer</h3>
+    <div className="bg-card border-2 rounded-2xl p-6 md:p-8 shadow-[var(--shadow-card)] max-w-sm w-full mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        <Clock className="w-8 h-8 text-primary" />
+        <h3 className="font-display font-semibold text-xl md:text-2xl text-foreground">Safety Timer</h3>
       </div>
 
       {!running && !expired ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <label className="text-sm text-muted-foreground">Minutes:</label>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <label className="text-lg font-medium text-muted-foreground">Minutes:</label>
             <select
               value={minutes}
               onChange={(e) => setMinutes(Number(e.target.value))}
-              className="bg-muted rounded-md px-3 py-1.5 text-sm text-foreground border-0"
+              className="bg-muted rounded-xl px-4 py-3 text-lg font-bold text-foreground border-0 w-32 outline-none"
             >
               {[5, 10, 15, 30, 45, 60].map((m) => (
                 <option key={m} value={m}>{m} min</option>
               ))}
             </select>
           </div>
-          <Button onClick={start} className="w-full gap-2" size="sm">
-            <Play className="w-4 h-4" /> Start Timer
+          <Button onClick={start} className="w-full gap-3 h-14 text-lg font-bold shadow-lg mt-2 cursor-pointer" size="lg">
+            <Play className="w-5 h-5" /> Start Timer
           </Button>
         </div>
       ) : running ? (
-        <div className="space-y-3 text-center">
-          <p className="text-3xl font-display font-bold text-foreground">{formatTime(secondsLeft!)}</p>
-          <p className="text-xs text-muted-foreground">Check in before timer expires</p>
-          <div className="flex gap-2">
-            <Button onClick={checkin} variant="default" size="sm" className="flex-1 gap-1 bg-safe hover:bg-safe/90 text-safe-foreground">
-              <Check className="w-4 h-4" /> I'm Safe
+        <div className="space-y-4 text-center">
+          <p className="text-5xl md:text-6xl font-display font-black text-foreground tracking-wider">{formatTime(secondsLeft!)}</p>
+          <p className="text-sm md:text-base text-muted-foreground pb-2">Check in before timer expires</p>
+          <div className="flex gap-4">
+            <Button onClick={checkin} variant="default" size="lg" className="flex-1 gap-2 h-14 bg-safe hover:bg-safe/90 text-safe-foreground font-bold text-lg shadow-lg cursor-pointer">
+              <Check className="w-6 h-6" /> I'm Safe
             </Button>
-            <Button onClick={stop} variant="outline" size="sm" className="flex-1 gap-1">
-              <Square className="w-4 h-4" /> Stop
+            <Button onClick={stop} variant="outline" size="lg" className="flex-1 gap-2 h-14 font-bold text-lg border-2 cursor-pointer">
+              <Square className="w-6 h-6" /> Stop
             </Button>
           </div>
         </div>
       ) : (
-        <div className="text-center space-y-3">
-          <p className="text-sm text-sos font-semibold">⚠️ Timer Expired</p>
-          <Button onClick={() => { setExpired(false); setSecondsLeft(null); }} variant="outline" size="sm" className="w-full">
+        <div className="text-center space-y-4 pt-2">
+          <p className="text-xl text-sos font-bold">⚠️ Timer Expired</p>
+          <Button onClick={() => { setExpired(false); setSecondsLeft(null); }} variant="outline" size="lg" className="w-full h-14 font-bold text-lg border-2 cursor-pointer">
             Reset
           </Button>
         </div>

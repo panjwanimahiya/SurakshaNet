@@ -17,11 +17,12 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
+      <section className="pt-36 pb-16 md:pt-40 md:pb-24 relative overflow-hidden min-h-[calc(100vh-112px)] flex flex-col justify-center">
         {/* Background accent */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/5 blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-primary/10 blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
-        <div className="container mx-auto px-4 relative">
+        <div className="container mx-auto px-4 relative mt-12 md:mt-0">
           {isLoggedIn ? (
             /* Logged-in view: SOS focused */
             <div className="flex flex-col items-center gap-8">
@@ -31,10 +32,10 @@ const Index = () => {
                 transition={{ duration: 0.5 }}
                 className="text-center"
               >
-                <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-4">
                   Welcome back, <span className="text-primary">{userName}</span>
                 </h1>
-                <p className="text-muted-foreground">You're protected. Use the tools below if you need help.</p>
+                <p className="text-xl md:text-2xl text-muted-foreground">You are protected. Help is just one signal away.</p>
               </motion.div>
 
               <motion.div
@@ -57,48 +58,39 @@ const Index = () => {
             </div>
           ) : (
             /* Guest view: marketing hero */
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="flex flex-col justify-center items-center text-center w-full max-w-6xl mx-auto py-10 lg:py-20">
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="text-center lg:text-left"
+                className="flex flex-col items-center"
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-medium mb-6">
-                  <Shield className="w-4 h-4" />
+                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-primary/10 text-primary border border-primary/20 text-lg md:text-xl font-bold mb-10 w-fit uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.1)]">
+                  <Shield className="w-6 h-6" />
                   Your Safety Companion
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight mb-5">
-                  Stay Safe,{" "}
-                  <span className="text-primary">Stay Connected</span>
+
+                <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[130px] font-display font-extrabold text-foreground leading-[1] mb-10 tracking-tight drop-shadow-lg">
+                  One Signal. <br className="hidden lg:block" />
+                  Help. <br className="hidden lg:block" />
+                  <span className="text-primary mt-2 block">Anywhere.</span>
                 </h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0">
-                  SafeHer empowers you with instant SOS alerts, live location sharing, and smart safety tools — because your safety matters most.
+
+                <p className="text-2xl md:text-3xl lg:text-4xl text-muted-foreground mb-16 max-w-4xl leading-relaxed font-light">
+                  SurakshaNet empowers you with instant SOS alerts, live location sharing, and smart safety tools — ensuring protection whenever you need it.
                 </p>
-                <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+
+                <div className="flex flex-wrap gap-6 justify-center">
                   <Link to="/signup">
-                    <Button size="lg" className="gap-2 font-semibold">
-                      Get Started <ArrowRight className="w-4 h-4" />
+                    <Button size="lg" className="h-20 px-12 text-2xl font-bold gap-3 shadow-[0_0_30px_rgba(255,0,0,0.3)] hover:shadow-[0_0_40px_rgba(255,0,0,0.5)] transition-all rounded-2xl">
+                      Get Protected <ArrowRight className="w-7 h-7" />
                     </Button>
                   </Link>
                   <Link to="/safety-tips">
-                    <Button size="lg" variant="outline" className="font-semibold">
+                    <Button size="lg" variant="outline" className="h-20 px-12 text-2xl font-bold border-4 rounded-2xl hover:bg-secondary">
                       Safety Tips
                     </Button>
                   </Link>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="flex flex-col items-center gap-8"
-              >
-                <SOSButton />
-                <div className="flex flex-wrap gap-4 justify-center items-start">
-                  <FakeCallButton />
-                  <SafetyTimerWidget />
                 </div>
               </motion.div>
             </div>
@@ -135,13 +127,15 @@ const Index = () => {
       )}
 
       {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="font-display font-bold text-foreground">SafeHer</span>
+      <footer className="border-t-2 py-12 lg:py-16 bg-background">
+        <div className="container mx-auto px-4 lg:px-20 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-4">
+            <img src="/favicon.png" alt="SurakshaNet Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-xl" />
+            <span className="font-display font-extrabold text-3xl md:text-4xl text-foreground tracking-tight">
+              Suraksha<span className="text-red-600">Net</span>
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2026 SafeHer. Stay safe, stay empowered.</p>
+          <p className="text-xl md:text-2xl font-bold text-muted-foreground text-center md:text-right">© 2026 SurakshaNet. Stay safe, stay empowered.</p>
         </div>
       </footer>
     </div>
