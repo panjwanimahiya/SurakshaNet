@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -11,6 +12,7 @@ const axios = require('axios');
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || 'AC_dummy_key';
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || 'dummy_token';
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || '+1234567890'; // Your approved WhatsApp Number
+
 // Initialize Twilio payload gateway
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 // ======================================================================= //
@@ -143,25 +145,34 @@ app.post('/api/sos', authenticateToken, async (req, res) => {
   console.log(`\n[CRITICAL BACKGROUND SOS DISPATCH INITIATED FOR USER: ${req.user.name}]`);
   const dispatchResults = [];
 
-  // Actual Server-to-WhatsApp background API completely bypassing the frontend UI
+  // Actual WhatsApp background dispatch
   for (const c of contacts) {
     try {
       // Force sanitize numbers to strict E.164 standard (+91)
-      let rawPhone = c.phone.replace(/[^0-9+]/g, "");
-      const formattedPhone = rawPhone.length === 10 ? `+91${rawPhone}` : (rawPhone.startsWith('+') ? rawPhone : `+${rawPhone}`);
+      let rawPhone = c.phone.replace(/[^0-9]/g, "");
+      const formattedPhone = rawPhone.length === 10 ? `+91${rawPhone}` : `+${rawPhone}`;
 
-      // The exact WhatsApp Business API execution payload that guarantees zero user confirmation!
-      const response = await twilioClient.messages.create({
-        body: message,
-        from: `whatsapp:${TWILIO_PHONE_NUMBER}`,
-        to: `whatsapp:${formattedPhone}`
-      });
-      console.log(`-> 🟢 WHATSAPP BUSINESS API: Successfully forced message to ${c.name} at ${formattedPhone}. ID: ${response.sid}`);
-      dispatchResults.push({ name: c.name, status: "sent" });
+      // Dispatch via Twilio Business API (if configured)
+      try {
+        const response = await twilioClient.messages.create({
+          body: message,
+          from: `whatsapp:${TWILIO_PHONE_NUMBER}`,
+          to: `whatsapp:${formattedPhone}`
+        });
+        console.log(`-> 🟢 TWILIO API: Successfully sent message to ${c.name}. ID: ${response.sid}`);
+        dispatchResults.push({ name: c.name, status: "sent_api" });
+      } catch (tErr) {
+        // Log simulated success if Twilio keys are just dummies
+        if (TWILIO_ACCOUNT_SID.startsWith('AC_YOUR')) {
+           console.log(`-> ⚠️ Simulated dispatch to ${c.name} (Waiting for .env config)`);
+           dispatchResults.push({ name: c.name, status: "simulated_success" });
+        } else {
+           throw tErr;
+        }
+      }
     } catch (err) {
-      // Safely catches dummy key exceptions without breaking the interval tracking loop
-      console.log(`-> ⚠️ WhatsApp Business API Offline (Missing Sandbox Keys): Simulated send to ${c.name}. Reason: ${err.message}`);
-      dispatchResults.push({ name: c.name, status: "simulated_success" });
+      console.log(`-> ❌ Dispatch failed for ${c.name}: ${err.message}`);
+      dispatchResults.push({ name: c.name, status: "failed", error: err.message });
     }
   }
 

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, MapPin, Check, Loader2, Settings, MapPinOff } from "lucide-react";
+import { AlertTriangle, MapPin, Check, Loader2, Settings, MapPinOff, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
-type SOSState = "idle" | "confirming" | "sending" | "sent";
+type SOSState = "idle" | "sending" | "sent";
 type LocationPermission = "prompt" | "granted" | "denied" | "unavailable";
 
 const SOSButton = () => {
@@ -46,7 +47,7 @@ const SOSButton = () => {
   };
 
   const [contacts, setContacts] = useState<any[]>([]);
-  const { getToken } = useAuth();
+  const { getToken, userName } = useAuth();
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -89,7 +90,7 @@ const SOSButton = () => {
   };
 
   const handleSOS = () => {
-    if (state === "idle" || state === "confirming") {
+    if (state === "idle") {
       checkPermission();
       setState("sending");
       
@@ -109,25 +110,50 @@ const SOSButton = () => {
   const sendAlert = async (locationUrl: string | null, isFirst: boolean = false) => {
     const locationLine = locationUrl
       ? `\n📍 My live location: ${locationUrl}`
-      : "\n📍 Location unavailable";
-    const rawMessage = `🚨 EMERGENCY SOS! I am in danger and need help immediately!${locationLine}\n⏰ Time: ${new Date().toLocaleString()}\nPlease contact me or send help immediately!`;
+      : "\n📍 Location unavailable (Please check GPS)";
+    const rawMessage = `🚨 EMERGENCY SOS! This is ${userName || 'User'}. I am in danger and need help immediately!${locationLine}\n⏰ Time: ${new Date().toLocaleString()}\nPlease contact me or send help immediately!`;
 
-    // Guarantee physical visibility for demonstration by hijacking the exact current active browser intent
+    if (!locationUrl && isFirst) {
+      toast.warning("Location unavailable. Sending alert without coordinates.", {
+        icon: <MapPinOff className="w-4 h-4" />
+      });
+    }
+
+    // Trigger the browser's WhatsApp intent (shows the "Open WhatsApp?" popup)
     if (isFirst && contacts.length > 0) {
-      const primaryPhone = contacts[0].phone.replace(/[^0-9+]/g, "");
-      // Direct the SurakshaNet tab strictly into the WhatsApp Web pipeline, avoiding any Chrome security blockers
-      window.location.assign(`https://web.whatsapp.com/send?phone=${primaryPhone}&text=${encodeURIComponent(rawMessage)}`);
+      const primaryPhone = contacts[0].phone.replace(/[^0-9]/g, "");
+      const whatsappUrl = `whatsapp://send?phone=${primaryPhone}&text=${encodeURIComponent(rawMessage)}`;
+      
+      // Using a small timeout to ensure geolocation toast/state updates are visible first
+      setTimeout(() => {
+        window.location.assign(whatsappUrl);
+      }, 500);
     }
 
     // Silently and automatically dispatch across the SurakshaNet server
     try {
       const token = getToken();
       if (token) {
-        await fetch("http://localhost:5000/api/sos", {
+        const response = await fetch("http://localhost:5000/api/sos", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ locationUrl, message: rawMessage })
         });
+        
+        if (response.ok) {
+          if (isFirst) {
+            toast.success("SOS Alert Initiated!", {
+              description: "WhatsApp is opening and background dispatch is active.",
+              duration: 5000
+            });
+          }
+        } else {
+          const errorData = await response.json();
+          toast.error("Background Dispatch Error", {
+            description: errorData.error || "Manual WhatsApp sending recommended.",
+            icon: <AlertCircle className="w-4 h-4" />
+          });
+        }
       }
     } catch (e) {
       console.error("Background dispatch failed:", e);
@@ -153,9 +179,7 @@ const SOSButton = () => {
         whileTap={{ scale: 0.95 }}
         className={`relative z-10 w-64 h-64 md:w-72 md:h-72 rounded-full font-display font-bold text-4xl md:text-5xl flex flex-col items-center justify-center gap-3 transition-all duration-300 ${state === "idle"
             ? "bg-sos text-sos-foreground shadow-[var(--shadow-sos)] sos-pulse"
-            : state === "confirming"
-              ? "bg-warning text-warning-foreground shadow-[0_0_40px_hsl(var(--warning)/0.5)]"
-              : state === "sending"
+            : state === "sending"
                 ? "bg-warning text-warning-foreground"
                 : "bg-sos text-sos-foreground shadow-[0_0_80px_hsl(var(--sos)/0.7)] sos-pulse"
           }`}
@@ -165,13 +189,6 @@ const SOSButton = () => {
             <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2">
               <AlertTriangle className="w-16 h-16 md:w-24 md:h-24 mb-2" />
               <span>SOS</span>
-            </motion.div>
-          )}
-          {state === "confirming" && (
-            <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center gap-2 text-2xl md:text-3xl text-center">
-              <AlertTriangle className="w-14 h-14 md:w-16 md:h-16 mb-2" />
-              <span>TAP TO</span>
-              <span>CONFIRM</span>
             </motion.div>
           )}
           {state === "sending" && (
@@ -190,16 +207,6 @@ const SOSButton = () => {
         </AnimatePresence>
       </motion.button>
 
-      {state === "confirming" && (
-        <motion.button
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={cancel}
-          className="text-sm text-muted-foreground hover:text-foreground underline"
-        >
-          Cancel
-        </motion.button>
-      )}
 
       <p className="text-lg md:text-xl text-muted-foreground text-center max-w-[300px]">
         {state === "idle" && (
@@ -208,7 +215,6 @@ const SOSButton = () => {
             Shares your live location via internet
           </>
         )}
-        {state === "confirming" && "Tap again to send emergency alert"}
         {state === "sent" && (
            <span className="text-sos font-bold animate-pulse">Broadcasting live location directly to contacts every 15s...</span>
         )}
